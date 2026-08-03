@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>내가좋아하는영화</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        background-color: rgb(205, 211, 211);
+        font-family: system-ui, sans-serif;
+        line-height: 1.6;
+      }
+      .card {
+        background-color: white;
+        border: 1px solid #000000;
+        border-radius: 5px;
+        padding: 24px;
+        max-width: 500px;
+        margin: 20px auto;
+      }
+
+      .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      h1 {
+        color: blueviolet;
+        margin: 0;
+      }
+      .card-head p {
+        margin: 0;
+      }
+
+      img {
+        border-radius: 8px;
+      }
+
+      .reason-list {
+        list-style: none;
+        padding-left: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+       
+      }
+      .reason-list li {
+        background-color: #eef2ff; /* ← 이걸 넣으면 그 순간 알약이 나타납니다 */
+        color: #4f46e5;
+        padding: 6px 14px;
+        border-radius: 999px;
+
+
+      }
+
+      .btn {
+        background-color: blueviolet;
+        color: aliceblue;
+        cursor: pointer;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+      }
+      .btn:hover {
+        background-color: rgb(255, 255, 255);
+        color: black;
+      }
+      .form-row {
+        display: flex;
+        gap: 8px;
+      }
+      .input {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #000000;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="card-head">
+        <h1>내가 좋아하는 영화</h1>
+        <p>인생 영화 3편을 소개합니다.</p>
+      </div>
+      <hr />
+
+      <img
+        src="https://picsum.photos/id/1025/300/300"
+        width="300"
+        alt="인터스텔라 포스터"
+      />
+
+      <h2>좋아하는 이유</h2>
+      <ul class="reason-list">
+        <li>음악이 좋다</li>
+        <li>배우가 좋다</li>
+        <li>결말이 좋다</li>
+      </ul>
+
+      <h2>추천 순위</h2>
+      <ol>
+        <li>인터스텔라</li>
+        <li>라라랜드</li>
+        <li>인셉션</li>
+      </ol>
+
+      <h2>더 보기</h2>
+      <p>
+        자세한 정보는
+        <a href="https://www.imdb.com" target="_blank">IMDb</a>에서 확인하세요
+      </p>
+
+      <h2>한줄평 남기기</h2>
+      <div class="form-row">
+        <input
+          type="text"
+          id="reviewInput"
+          placeholder="한줄평을 적어주세요"
+          class="input"
+        />
+        <button id="submitBtn" class="btn">등록</button>
+      </div>
+      <p id="reviewList">아직 한줄평이 없습니다.</p>
+    </div>
+
+        <script>
+      const reviewInput = document.getElementById("reviewInput");
+      const submitBtn = document.getElementById("submitBtn");
+      const reviewList = document.getElementById("reviewList");
+
+      submitBtn.addEventListener("click", function() {
+        const text = reviewInput.value.trim();
+        if(text === "") return;
+        reviewList.textContent = text;
+        reviewInput.value = "";
+
+      });
+
+     
+    </script>
+  </body>
+</html>

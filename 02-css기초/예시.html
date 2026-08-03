@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSS 기초 - 프로필 카드</title>
+
+    <style>
+      /*
+        ==========================================================
+          CSS 문법의 전부. 이 3줄이 끝이다.
+        ==========================================================
+
+            선택자 {
+              속성: 값;
+            }
+
+          선택자 = 누구를?      (어떤 요소를 고를지)
+          속성   = 무엇을?      (색? 크기? 여백?)
+          값     = 어떻게?      (빨강? 20px?)
+
+          · 속성과 값 사이는  콜론 :
+          · 한 줄 끝나면      세미콜론 ;   ← 빼먹으면 그 줄부터 다 죽는다
+          · 주석은 이렇게      (슬래시-별 ... 별-슬래시)
+      */
+
+      /* ========== 1. 선택자 3종 ========== */
+
+      /* (1) 타입 선택자 — 해당 태그 '전부' */
+      body {
+        font-family: system-ui, sans-serif; /* 글꼴 */
+        background-color: #f4f4f5;          /* 배경색 */
+        color: #27272a;                     /* 글자색 */
+        line-height: 1.6;                   /* 줄간격. 숫자만 쓰면 '글자크기의 몇 배' */
+      }
+      /*
+        중요: body에 준 font-family, color, line-height 는 자식들이 물려받는다 (상속).
+        그래서 h1, p, li 에 일일이 안 써도 된다.
+        반면 background, border, padding, margin 은 상속 안 됨.
+      */
+
+      /* (2) 클래스 선택자 — 앞에 점(.)  → 재사용 가능. 실무에서 제일 많이 씀 */
+      .card {
+        background-color: #ffffff;
+        border: 1px solid #e4e4e7;   /* 두께 종류 색 */
+        border-radius: 12px;          /* 모서리 둥글게 */
+        padding: 24px;                /* 안쪽 여백 */
+        max-width: 420px;             /* 최대 너비. 화면이 좁으면 알아서 줄어듦 */
+        margin: 40px auto;            /* 위아래 40px, 좌우 auto = 가운데 정렬 */
+      }
+
+      /* (3) id 선택자 — 앞에 우물정(#) → 페이지에 1개뿐인 것 */
+      #mainTitle {
+        color: #4f46e5;
+        font-size: 28px;
+        margin: 0 0 4px 0;   /* 위 오른쪽 아래 왼쪽 (시계방향) */
+      }
+      /*
+        선택자 우선순위:  id(#) > class(.) > 태그
+        그래서 id는 함부로 쓰면 나중에 CSS로 덮어쓰기가 힘들어진다.
+        → 스타일은 class 로, id 는 JS 손잡이로. 이게 관례다.
+      */
+
+      /* ========== 2. 박스 모델 — CSS의 심장 ========== */
+      /*
+          모든 요소는 이렇게 4겹의 상자다:
+
+          ┌─────────── margin (바깥 여백, 남과의 거리) ───────────┐
+          │  ┌──────── border (테두리) ────────────────────────┐ │
+          │  │  ┌───── padding (안쪽 여백, 내용과 테두리 거리) ─┐│ │
+          │  │  │                                            ││ │
+          │  │  │              content (내용)                 ││ │
+          │  │  │                                            ││ │
+          │  │  └────────────────────────────────────────────┘│ │
+          │  └───────────────────────────────────────────────┘ │
+          └──────────────────────────────────────────────────┘
+
+          padding = 안쪽 (배경색이 칠해짐)
+          margin  = 바깥 (투명, 배경 없음)
+          이 둘 헷갈리는 게 초보 최대 난관이다. "패딩은 옷 안감, 마진은 옆사람과 거리"
+      */
+
+      * {
+        box-sizing: border-box;
+      }
+      /*
+        * = 전체 선택자 (모든 요소)
+
+        기본값이면 width:200px + padding:20px 일 때 실제 너비가 240px가 된다 (황당함)
+        border-box 로 바꾸면 padding/border 를 width 안에 포함해서 계산 → 200px 그대로.
+        거의 모든 프로젝트가 맨 위에 이 3줄을 넣고 시작한다. 그냥 외워라.
+      */
+
+      .profile-img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;  /* 정사각형 + 50% = 완벽한 원 */
+        object-fit: cover;   /* 비율 안 깨지게 잘라서 채움 */
+        display: block;      /* img는 원래 인라인 → 블록으로 바꿔야 margin auto 먹음 */
+        margin: 0 auto 16px; /* 위0 좌우auto 아래16px → 가운데 정렬 */
+      }
+
+      /* ========== 3. 여러 값 쓰는 법 (단축 속성) ========== */
+      .role {
+        color: #71717a;
+        font-size: 14px;
+        margin: 0 0 20px 0;
+      }
+      /*
+          margin: 10px;                  → 사방 10px
+          margin: 10px 20px;             → 위아래10 좌우20
+          margin: 10px 20px 30px;        → 위10 좌우20 아래30
+          margin: 10px 20px 30px 40px;   → 위 오른쪽 아래 왼쪽 (시계방향)
+          padding 도 똑같다.
+      */
+
+      /* ========== 4. 목록 꾸미기 ========== */
+      .skill-list {
+        list-style: none;  /* 점(•) 제거 */
+        padding-left: 0;   /* ul의 기본 왼쪽 들여쓰기 제거 */
+        margin: 0 0 20px 0;
+      }
+
+      .skill-list li {
+        /* 띄어쓰기로 두 선택자를 이으면 "후손" 이라는 뜻 */
+        /* .skill-list 안에 있는 li 전부 */
+        background-color: #eef2ff;
+        color: #4f46e5;
+        padding: 6px 12px;
+        border-radius: 999px;      /* 아주 큰 값 → 알약 모양 */
+        margin-bottom: 8px;
+        display: inline-block;     /* 인라인처럼 옆으로 붙되, 크기(padding)는 먹는 상태 */
+        font-size: 14px;
+      }
+
+      /* ========== 5. 버튼 & 입력칸 ========== */
+      .input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d4d4d8;
+        border-radius: 8px;
+        font-size: 15px;
+        font-family: inherit;   /* input은 폰트 상속을 안 받는다. 명시해줘야 함 */
+        margin-bottom: 8px;
+      }
+
+      .btn {
+        background-color: #4f46e5;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 15px;
+        cursor: pointer;   /* 마우스 올리면 손가락 모양 */
+      }
+
+      /* ========== 6. 가상 클래스 — 상태에 따른 스타일 ========== */
+      .btn:hover {
+        background-color: #4338ca;  /* 마우스 올렸을 때 */
+      }
+
+      .btn:active {
+        background-color: #3730a3;  /* 누르고 있는 동안 */
+      }
+
+      .input:focus {
+        outline: none;
+        border-color: #4f46e5;      /* 커서가 들어갔을 때 */
+      }
+      /*
+        :hover  마우스 올림
+        :focus  선택됨(입력칸에 커서)
+        :active 누르는 중
+        이 3개만 알아도 인터랙션 절반은 커버된다.
+      */
+
+      /* ========== 7. 전환 애니메이션 ========== */
+      .btn {
+        transition: background-color 0.2s;
+        /* 색이 0.2초에 걸쳐 부드럽게 바뀜. 이거 하나로 완성도가 확 올라간다 */
+      }
+    </style>
+  </head>
+
+  <body>
+    <!--
+      class = 스타일 붙이는 이름표. 여러 요소가 같은 이름 써도 됨 (중복 OK)
+      id    = 페이지에 하나뿐인 이름표 (중복 금지)
+    -->
+    <div class="card">
+      <img
+        class="profile-img"
+        src="https://picsum.photos/id/1005/200/200"
+        alt="이재현의 프로필 사진"
+      />
+
+      <h1 id="mainTitle">이재현</h1>
+      <p class="role">웹 개발을 배우는 중</p>
+
+      <ul class="skill-list">
+        <li>HTML</li>
+        <li>CSS</li>
+        <li>JavaScript</li>
+      </ul>
+
+      <input class="input" type="text" id="nameInput" placeholder="이름을 입력하세요" />
+      <button class="btn" id="greetBtn">인사</button>
+    </div>
+  </body>
+</html>
