@@ -53,6 +53,21 @@
         padding: 6px 14px;
         border-radius: 999px;
       }
+      .del {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #a1a1aa;
+        font-size: 18px;
+        line-height: 1;
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
+
+      .del:hover {
+        background: #fee2e2;
+        color: #dc2626;
+      }
 
       .btn {
         background-color: blueviolet;
@@ -158,12 +173,18 @@
       function render() {
         reviewList.innerHTML = "";
 
-        comments.forEach(function (comment) {
+        comments.forEach((comment) => {
           const li = document.createElement("li");
           const span = document.createElement("span");
           span.textContent = comment.text;
 
+          const delBtn = document.createElement("button");
+          delBtn.className = "del";
+          delBtn.textContent = "삭제";
+          delBtn.dataset.id = comment.id;
+
           li.appendChild(span);
+          li.appendChild(delBtn);
           reviewList.appendChild(li);
         });
       }
@@ -183,6 +204,14 @@
           submitBtn.click();
         }
       });
+
+      reviewList.addEventListener("click", function (e) {
+        if (!e.target.classList.contains("del")) return; 
+        const id = Number(e.target.dataset.id);
+        comments = comments.filter((comment) => comment.id !== id);
+        render();
+      });
+
       render();
     </script>
   </body>
