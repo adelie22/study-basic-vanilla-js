@@ -87,7 +87,6 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-
       }
 
       #reviewList {
@@ -99,7 +98,7 @@
         padding: 6px 14px;
         border-radius: 999px;
         list-style: none;
-
+        margin-bottom: 5px;
       }
     </style>
   </head>
@@ -151,18 +150,40 @@
     </div>
 
     <script>
+      let comments = [];
       const reviewInput = document.getElementById("reviewInput");
       const submitBtn = document.getElementById("submitBtn");
       const reviewList = document.getElementById("reviewList");
 
+      function render() {
+        reviewList.innerHTML = "";
+
+        comments.forEach(function (comment) {
+          const li = document.createElement("li");
+          const span = document.createElement("span");
+          span.textContent = comment.text;
+
+          li.appendChild(span);
+          reviewList.appendChild(li);
+        });
+      }
+
       submitBtn.addEventListener("click", function () {
-        const li = document.createElement("li");
         const text = reviewInput.value.trim();
         if (text === "") return;
-        li.textContent = text;
-        reviewList.appendChild(li);
+        comments.push({ id: Date.now(), text: text });
+        render();
+
         reviewInput.value = "";
+        reviewInput.focus();
       });
+
+      reviewInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          submitBtn.click();
+        }
+      });
+      render();
     </script>
   </body>
 </html>
