@@ -46,15 +46,12 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-       
       }
       .reason-list li {
         background-color: #eef2ff; /* ← 이걸 넣으면 그 순간 알약이 나타납니다 */
         color: #4f46e5;
         padding: 6px 14px;
         border-radius: 999px;
-
-
       }
 
       .btn {
@@ -78,6 +75,31 @@
         padding: 10px;
         border-radius: 8px;
         border: 1px solid #000000;
+      }
+
+      #reviewList:empty::before {
+        content: "아직 한줄평이 없습니다.";
+        color: #a1a1aa;
+        font-size: 14px;
+
+        list-style: none;
+        padding-left: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+      }
+
+      #reviewList {
+        padding-left: 0;
+      }
+      #reviewList li {
+        background-color: #eef2ff;
+        color: #4f46e5;
+        padding: 6px 14px;
+        border-radius: 999px;
+        list-style: none;
+
       }
     </style>
   </head>
@@ -125,23 +147,22 @@
         />
         <button id="submitBtn" class="btn">등록</button>
       </div>
-      <p id="reviewList">아직 한줄평이 없습니다.</p>
+      <ul id="reviewList"></ul>
     </div>
 
-        <script>
+    <script>
       const reviewInput = document.getElementById("reviewInput");
       const submitBtn = document.getElementById("submitBtn");
       const reviewList = document.getElementById("reviewList");
 
-      submitBtn.addEventListener("click", function() {
+      submitBtn.addEventListener("click", function () {
+        const li = document.createElement("li");
         const text = reviewInput.value.trim();
-        if(text === "") return;
-        reviewList.textContent = text;
+        if (text === "") return;
+        li.textContent = text;
+        reviewList.appendChild(li);
         reviewInput.value = "";
-
       });
-
-     
     </script>
   </body>
 </html>
