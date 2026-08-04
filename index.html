@@ -166,11 +166,17 @@
     </div>
 
     <script>
-      let comments = [];
+      const KEY = "comments";
       const reviewInput = document.getElementById("reviewInput");
       const submitBtn = document.getElementById("submitBtn");
       const reviewList = document.getElementById("reviewList");
       const countText = document.getElementById("countText");
+
+     let comments = JSON.parse(localStorage.getItem(KEY)) || [];
+
+      function save() {
+        localStorage.setItem(KEY, JSON.stringify(comments));
+      }
 
       function render() {
         reviewList.innerHTML = "";
@@ -196,6 +202,7 @@
         const text = reviewInput.value.trim();
         if (text === "") return;
         comments.push({ id: Date.now(), text: text });
+        save();
         render();
 
         reviewInput.value = "";
@@ -213,6 +220,7 @@
         if (!e.target.classList.contains("del")) return; 
         const id = Number(e.target.dataset.id);
         comments = comments.filter((comment) => comment.id !== id);
+        save();
         render();
       });
 
