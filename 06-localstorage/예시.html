@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>localStorage</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: system-ui, sans-serif; background: #f4f4f5; color: #27272a;
+        line-height: 1.6; padding: 24px; max-width: 520px; margin: 0 auto;
+      }
+      .card {
+        background: #fff; border: 1px solid #e4e4e7;
+        border-radius: 12px; padding: 20px;
+      }
+      h1 { font-size: 20px; margin: 0 0 16px; }
+      .row { display: flex; gap: 8px; margin-bottom: 16px; }
+      .input {
+        flex: 1; padding: 9px 12px; border: 1px solid #d4d4d8;
+        border-radius: 8px; font-family: inherit; font-size: 15px;
+      }
+      .btn {
+        background: #4f46e5; color: #fff; border: none; padding: 9px 18px;
+        border-radius: 8px; cursor: pointer; font-size: 15px; font-family: inherit;
+      }
+      .btn:hover { background: #4338ca; }
+      .list { list-style: none; padding: 0; margin: 0; }
+      .list li {
+        display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+        border-radius: 8px; background: #fafafa; margin-bottom: 6px;
+      }
+      .list li span { flex: 1; }
+      .del {
+        background: none; border: none; cursor: pointer; color: #a1a1aa;
+        font-size: 18px; padding: 4px 8px; border-radius: 6px;
+      }
+      .del:hover { background: #fee2e2; color: #dc2626; }
+      .count { color: #71717a; font-size: 14px; margin: 12px 0 0; }
+      .list:empty::before { content: "아직 없습니다."; color: #a1a1aa; font-size: 14px; }
+    </style>
+  </head>
+
+  <body>
+    <div class="card">
+      <h1>할 일 목록 (저장됨)</h1>
+      <div class="row">
+        <input class="input" id="todoInput" type="text" placeholder="할 일" />
+        <button class="btn" id="addBtn">추가</button>
+      </div>
+      <ul class="list" id="todoList"></ul>
+      <p class="count" id="countText"></p>
+    </div>
+
+    <script>
+      /* ==========================================================
+         localStorage = 브라우저에 데이터를 영구 저장하는 공간
+
+           localStorage.setItem("키", "값")   저장
+           localStorage.getItem("키")         읽기 (없으면 null)
+           localStorage.removeItem("키")      삭제
+           localStorage.clear()               전부 삭제
+
+         ★ 문자열만 저장할 수 있다.
+           배열이나 객체를 그냥 넣으면 "[object Object]" 같은 쓰레기가 된다.
+           그래서 JSON 으로 변환해서 넣고, 꺼낼 때 되돌린다.
+
+           JSON.stringify(값)   →  객체/배열을 문자열로
+           JSON.parse(문자열)   →  문자열을 객체/배열로
+
+         ★ 어디에 저장되나
+           브라우저 + 도메인 단위. 개발자도구 → Application → Local Storage 에서
+           눈으로 확인하고 직접 지울 수 있다.
+         ========================================================== */
+
+      const KEY = "todos";   // 키 이름은 상수로 빼두면 오타를 막을 수 있다
+
+      const todoInput = document.getElementById("todoInput");
+      const addBtn = document.getElementById("addBtn");
+      const todoList = document.getElementById("todoList");
+      const countText = document.getElementById("countText");
+
+      /* ---------- 1. 불러오기 (페이지 열릴 때 한 번) ---------- */
+      let todos = JSON.parse(localStorage.getItem(KEY)) || [];
+      /*
+         처음 방문이면 getItem 이 null 을 반환하고,
+         JSON.parse(null) 은 null 이 된다 → || [] 로 빈 배열을 대신 쓴다.
+
+         || 는 "왼쪽이 비어있으면(null/undefined/0/"") 오른쪽을 써라" 라는 뜻.
+      */
+
+      /* ---------- 2. 저장하기 ---------- */
+      function save() {
+        localStorage.setItem(KEY, JSON.stringify(todos));
+      }
+
+      /* ---------- 3. 렌더 ---------- */
+      function render() {
+        todoList.innerHTML = "";
+
+        todos.forEach((todo) => {
+          const li = document.createElement("li");
+
+          const span = document.createElement("span");
+          span.textContent = todo.text;
+
+          const delBtn = document.createElement("button");
+          delBtn.className = "del";
+          delBtn.textContent = "×";
+          delBtn.dataset.id = todo.id;
+
+          li.appendChild(span);
+          li.appendChild(delBtn);
+          todoList.appendChild(li);
+        });
+
+        countText.textContent = `총 ${todos.length}개`;
+      }
+
+      /* ---------- 4. 추가 ---------- */
+      addBtn.addEventListener("click", function () {
+        const text = todoInput.value.trim();
+        if (text === "") return;
+
+        todos.push({ id: Date.now(), text: text });
+        save();      // ★ 배열이 바뀌면 저장
+        render();    // ★ 그리고 다시 그린다
+
+        todoInput.value = "";
+        todoInput.focus();
+      });
+      /*
+         ★ 패턴이 3단계로 굳어진다:
+              배열 바꾸기  →  save()  →  render()
+
+           save 를 빼먹으면 화면은 멀쩡한데 새로고침하면 사라진다.
+           이게 가장 흔한 버그다.
+      */
+
+      /* ---------- 5. 엔터 ---------- */
+      todoInput.addEventListener("keydown", function (e) {
+        if (e.isComposing) return;
+        if (e.key === "Enter") addBtn.click();
+      });
+
+      /* ---------- 6. 삭제 ---------- */
+      todoList.addEventListener("click", function (e) {
+        if (!e.target.classList.contains("del")) return;
+
+        const id = Number(e.target.dataset.id);
+        todos = todos.filter((todo) => todo.id !== id);
+        save();
+        render();
+      });
+
+      /* ---------- 7. 첫 화면 ---------- */
+      render();
+      /* 저장된 데이터를 불러왔으니, 이제 이 render() 가 진짜로 일을 한다. */
+    </script>
+  </body>
+</html>

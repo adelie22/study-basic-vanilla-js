@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fetch / async await</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: system-ui, sans-serif; background: #f4f4f5; color: #27272a;
+        line-height: 1.6; padding: 24px; max-width: 520px; margin: 0 auto;
+      }
+      .card {
+        background: #fff; border: 1px solid #e4e4e7;
+        border-radius: 12px; padding: 20px; margin-bottom: 20px;
+      }
+      h2 { font-size: 17px; margin: 0 0 12px; }
+      .btn {
+        background: #4f46e5; color: #fff; border: none; padding: 9px 18px;
+        border-radius: 8px; cursor: pointer; font-size: 15px; font-family: inherit;
+      }
+      .btn:hover { background: #4338ca; }
+      .btn:disabled { background: #a1a1aa; cursor: not-allowed; }
+      .list { list-style: none; padding: 0; margin: 12px 0 0; }
+      .list li {
+        padding: 10px 12px; background: #fafafa;
+        border-radius: 8px; margin-bottom: 6px;
+      }
+      .list li strong { display: block; }
+      .list li small { color: #71717a; }
+      .status { color: #71717a; font-size: 14px; margin: 12px 0 0; }
+      .status.error { color: #dc2626; }
+    </style>
+  </head>
+
+  <body>
+    <div class="card">
+      <h2>1. 사용자 목록 불러오기</h2>
+      <button class="btn" id="loadBtn">불러오기</button>
+      <p class="status" id="status"></p>
+      <ul class="list" id="userList"></ul>
+    </div>
+
+    <div class="card">
+      <h2>2. 일부러 실패시키기 (에러 처리 확인)</h2>
+      <button class="btn" id="failBtn">잘못된 주소로 요청</button>
+      <p class="status" id="failStatus"></p>
+    </div>
+
+    <script>
+      /* ==========================================================
+         fetch = 서버에 데이터를 요청하는 함수
+
+         핵심 문제: 요청은 시간이 걸린다 (네트워크).
+         JS는 기다려주지 않고 다음 줄로 넘어간다 → 비동기(async).
+
+           console.log("1");
+           fetch(...)          ← 요청만 보내고 바로 다음 줄로
+           console.log("2");   ← 응답이 오기 전에 먼저 실행됨
+
+         그래서 "응답이 오면 그때 실행할 코드"를 따로 표시해야 한다.
+         그 문법이 async / await.
+         ========================================================== */
+
+      const loadBtn = document.getElementById("loadBtn");
+      const status = document.getElementById("status");
+      const userList = document.getElementById("userList");
+
+      /* ---------- async 함수 ---------- */
+      async function loadUsers() {
+        /*
+           함수 앞에 async 를 붙이면 그 안에서 await 를 쓸 수 있다.
+           await = "이 줄이 끝날 때까지 기다렸다가 다음 줄로 가라"
+        */
+
+        loadBtn.disabled = true;             // 데이터 불러올 동안 중복 클릭 방지
+        status.className = "status";
+        status.textContent = "불러오는 중...";  // ★ 로딩 표시는 필수
+        userList.innerHTML = "";
+
+        try {
+          const res = await fetch("https://jsonplaceholder.typicode.com/users");
+          /*
+             await 덕분에 res 에는 '응답 객체'가 들어있다.
+             await 를 빼면 res 는 Promise(아직 안 온 약속) 가 되어 쓸 수 없다.
+          */
+
+          if (!res.ok) {
+            // 404, 500 같은 응답. fetch 는 이걸 에러로 안 본다 → 직접 확인해야 함
+            throw new Error(`서버 오류: ${res.status}`);
+          }
+
+          const users = await res.json();
+          /*
+             res.json() 도 시간이 걸리는 작업이라 await 가 또 필요하다.
+             응답 본문(문자열)을 객체/배열로 바꿔준다. JSON.parse 와 비슷한 역할.
+          */
+
+          users.forEach((user) => {
+            const li = document.createElement("li");
+            const name = document.createElement("strong");
+            name.textContent = user.name;
+            const email = document.createElement("small");
+            email.textContent = user.email;
+            li.appendChild(name);
+            li.appendChild(email);
+            userList.appendChild(li);
+          });
+
+          status.textContent = `${users.length}명 불러옴`;
+        } catch (err) {
+          /*
+             try 안에서 에러가 나면 여기로 온다.
+             네트워크 끊김, 잘못된 주소, 위에서 던진 throw 전부 여기로 모인다.
+             ★ 사용자에게 반드시 알려줘야 한다. 조용히 실패하는 게 최악이다.
+          */
+          status.className = "status error";
+          status.textContent = `실패: ${err.message}`;
+          console.error(err);
+        } finally {
+          /*
+             성공하든 실패하든 무조건 실행된다.
+             버튼 다시 켜기처럼 '뒷정리'는 여기에.
+          */
+          loadBtn.disabled = false;
+        }
+      }
+
+      loadBtn.addEventListener("click", loadUsers);
+
+      /* ---------- 실패 케이스 ---------- */
+      const failBtn = document.getElementById("failBtn");
+      const failStatus = document.getElementById("failStatus");
+
+      failBtn.addEventListener("click", async function () {
+        failStatus.className = "status";
+        failStatus.textContent = "요청 중...";
+        try {
+          const res = await fetch("https://jsonplaceholder.typicode.com/없는주소");
+          if (!res.ok) throw new Error(`${res.status} 응답`); //.status는 200 404같은 상태코드 반환
+          await res.json();
+        } catch (err) {
+          failStatus.className = "status error";
+          failStatus.textContent = `에러 잡음: ${err.message}`;
+        }
+      });
+
+      /* ==========================================================
+         정리
+
+           async function 이름() {
+             try {
+               const res = await fetch(주소);
+               if (!res.ok) throw new Error(...);
+               const data = await res.json();
+               // data 로 화면 그리기
+             } catch (err) {
+               // 에러 표시
+             } finally {
+               // 뒷정리
+             }
+           }
+
+         이 형태를 통째로 외워도 된다. 거의 항상 이 모양이다.
+
+         ★ 반드시 챙길 3가지 상태
+             로딩 중  →  "불러오는 중..." 표시, 버튼 비활성화
+             성공     →  데이터 렌더링
+             실패     →  에러 메시지 표시
+
+           초보 코드는 성공만 처리한다. 실무 코드는 셋 다 처리한다.
+
+         ★ .then() 문법도 있다 (옛날 방식, 남의 코드에서 자주 봄)
+             fetch(주소)
+               .then((res) => res.json())
+               .then((data) => { ... })
+               .catch((err) => { ... });
+           같은 일을 한다. 새로 쓸 땐 async/await 가 읽기 쉽다.
+         ========================================================== */
+    </script>
+  </body>
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>폼 요소와 시맨틱 태그</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: system-ui, sans-serif; background: #f4f4f5; color: #27272a;
+        line-height: 1.6; margin: 0;
+      }
+
+      /* 시맨틱 태그도 결국 div 와 똑같이 스타일링한다 */
+      header {
+        background: #fff; border-bottom: 1px solid #e4e4e7;
+        padding: 16px 24px;
+        display: flex; justify-content: space-between; align-items: center;
+      }
+      header h1 { font-size: 18px; margin: 0; }
+      nav ul { display: flex; gap: 16px; list-style: none; padding: 0; margin: 0; }
+      nav a { color: #71717a; text-decoration: none; font-size: 14px; }
+      nav a:hover { color: #4f46e5; }
+
+      main { max-width: 480px; margin: 24px auto; padding: 0 16px; }
+
+      section {
+        background: #fff; border: 1px solid #e4e4e7;
+        border-radius: 12px; padding: 20px; margin-bottom: 20px;
+      }
+      section h2 { font-size: 17px; margin: 0 0 16px; }
+
+      footer {
+        text-align: center; color: #a1a1aa;
+        font-size: 13px; padding: 24px;
+      }
+
+      /* ---- 폼 ---- */
+      .field { margin-bottom: 16px; }
+      .field label {
+        display: block;          /* label 을 블록으로 → 입력칸 위에 올라감 */
+        font-size: 14px; font-weight: 600; margin-bottom: 4px;
+      }
+      .field input, .field select, .field textarea {
+        width: 100%; padding: 9px 12px; border: 1px solid #d4d4d8;
+        border-radius: 8px; font-family: inherit; font-size: 15px;
+      }
+      .field input:focus, .field select:focus, .field textarea:focus {
+        outline: none; border-color: #4f46e5;
+      }
+      .field textarea { resize: vertical; min-height: 80px; }
+
+      /* 체크박스/라디오는 label 과 가로로 */
+      .check { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+      .check input { width: auto; }
+      .check label { font-weight: 400; margin: 0; }
+
+      .hint { font-size: 13px; color: #71717a; margin: 4px 0 0; }
+      .error { font-size: 13px; color: #dc2626; margin: 4px 0 0; min-height: 20px; }
+
+      .btn {
+        background: #4f46e5; color: #fff; border: none; padding: 10px 20px;
+        border-radius: 8px; cursor: pointer; font-size: 15px; font-family: inherit;
+        width: 100%;
+      }
+      .btn:hover { background: #4338ca; }
+
+      .result {
+        background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;
+        border-radius: 8px; padding: 12px; font-size: 14px; white-space: pre-line;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!--
+      ============================================================
+        시맨틱 태그 = 의미를 가진 div
+
+        <div class="header">  →  <header>
+        <div class="nav">     →  <nav>
+        <div class="main">    →  <main>
+
+        생김새는 div 와 똑같다. 다른 건 '의미'뿐이다.
+        스크린리더가 "본문으로 건너뛰기" 를 할 수 있고,
+        검색엔진이 어디가 본문인지 알고, 코드도 읽기 쉬워진다.
+
+          <header>   페이지/섹션의 머리말 (로고, 제목)
+          <nav>      메뉴 묶음
+          <main>     본문. 페이지에 딱 1개. 헤더/푸터/사이드바 제외한 핵심
+          <section>  주제로 묶인 덩어리. 보통 제목(h2)을 가진다
+          <article>  그 자체로 독립적인 글 (블로그 글, 댓글, 상품 카드)
+          <aside>    본문과 관련 적은 곁다리 (광고, 추천)
+          <footer>   꼬리말 (저작권, 연락처)
+
+        판단법: "이 덩어리에 이름을 붙인다면?" → 맞는 태그가 있으면 그걸 쓰고,
+                없으면 그때 div 를 쓴다.
+      ============================================================
+    -->
+
+    <header>
+      <h1>가입 예시</h1>
+      <nav>
+        <ul>
+          <li><a href="#">홈</a></li>
+          <li><a href="#">소개</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section>
+        <h2>회원가입</h2>
+
+        <!--
+          ============================================================
+            <form> 을 쓰면 공짜로 따라오는 것
+
+              · 엔터키로 제출 (keydown 코드 불필요)
+              · 브라우저 자동완성
+              · required, type=email 등 기본 검증
+              · 스크린리더가 "폼" 이라고 인식
+
+            반드시 해야 할 것: submit 이벤트에서 e.preventDefault()
+            안 하면 페이지가 새로고침되어 입력값이 다 날아간다.
+          ============================================================
+        -->
+        <form id="signupForm" novalidate>
+          <!--
+            novalidate = 브라우저 기본 검증 UI를 끈다.
+            직접 에러 메시지를 그리려고 껐다. 검증 자체는 JS로 한다.
+            (기본 UI를 쓰고 싶으면 novalidate 를 빼면 된다)
+          -->
+
+          <div class="field">
+            <label for="name">이름</label>
+            <input type="text" id="name" name="name" required />
+            <p class="error" id="nameError"></p>
+          </div>
+          <!--
+            ★ label 의 for = input 의 id  (짝을 맞춘다)
+              → label 을 클릭하면 그 입력칸에 포커스가 간다
+              → 스크린리더가 "이름, 편집창" 이라고 읽어준다
+              label 없는 입력칸은 접근성 위반이다. placeholder 는 label 대체가 아니다.
+
+            ★ name 속성
+              서버로 전송될 때의 키 이름. FormData 로 값을 꺼낼 때도 이걸 쓴다.
+          -->
+
+          <div class="field">
+            <label for="email">이메일</label>
+            <input type="email" id="email" name="email" required />
+            <p class="error" id="emailError"></p>
+          </div>
+          <!--
+            ★ type 을 정확히 쓰면 모바일 키보드가 바뀐다
+              text     일반
+              email    @ 가 있는 키보드
+              tel      숫자 키패드
+              number   숫자만
+              password 가려짐
+              date     날짜 선택기
+              url / search / color / range / file
+          -->
+
+          <div class="field">
+            <label for="pw">비밀번호</label>
+            <input type="password" id="pw" name="pw" required minlength="8" />
+            <p class="hint">8자 이상</p>
+            <p class="error" id="pwError"></p>
+          </div>
+
+          <div class="field">
+            <label for="job">직업</label>
+            <select id="job" name="job">
+              <option value="">선택하세요</option>
+              <option value="student">학생</option>
+              <option value="dev">개발자</option>
+              <option value="etc">기타</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>관심 분야</label>
+            <div class="check">
+              <input type="checkbox" id="fe" name="interest" value="프론트엔드" />
+              <label for="fe">프론트엔드</label>
+            </div>
+            <div class="check">
+              <input type="checkbox" id="be" name="interest" value="백엔드" />
+              <label for="be">백엔드</label>
+            </div>
+          </div>
+          <!-- 체크박스 = 여러 개 선택 가능 -->
+
+          <div class="field">
+            <label>알림 받기</label>
+            <div class="check">
+              <input type="radio" id="yes" name="notify" value="예" checked />
+              <label for="yes">예</label>
+            </div>
+            <div class="check">
+              <input type="radio" id="no" name="notify" value="아니오" />
+              <label for="no">아니오</label>
+            </div>
+          </div>
+          <!--
+            라디오 = 하나만 선택.
+            ★ 같은 그룹은 name 이 같아야 한다. 다르면 둘 다 선택돼버린다.
+          -->
+
+          <div class="field">
+            <label for="bio">자기소개</label>
+            <textarea id="bio" name="bio" placeholder="간단히 적어주세요"></textarea>
+          </div>
+
+          <button class="btn" type="submit">가입하기</button>
+          <!--
+            form 안의 button 은 type 기본값이 submit 이다.
+            제출이 아닌 버튼(예: 취소)은 반드시 type="button" 을 명시해야 한다.
+            안 그러면 누를 때마다 폼이 제출된다. 흔한 버그.
+          -->
+        </form>
+      </section>
+
+      <section>
+        <h2>제출 결과</h2>
+        <div class="result" id="result">아직 제출 안 됨</div>
+      </section>
+    </main>
+
+    <footer>&copy; 2026 연습용</footer>
+
+    <script>
+      const form = document.getElementById("signupForm");
+      const result = document.getElementById("result");
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault(); // ★ 새로고침 막기. 없으면 값이 다 날아간다
+
+        // ---------- 검증 ----------
+        let ok = true;
+
+        const name = form.name.value.trim();
+        const email = form.email.value.trim();
+        const pw = form.pw.value;
+        /*
+           form.name  →  name="name" 인 요소를 바로 꺼낼 수 있다.
+           getElementById 를 안 써도 된다.
+        */
+
+        // 에러 메시지 초기화
+        document.getElementById("nameError").textContent = "";
+        document.getElementById("emailError").textContent = "";
+        document.getElementById("pwError").textContent = "";
+
+        if (name === "") {
+          document.getElementById("nameError").textContent = "이름을 입력하세요";
+          ok = false;
+        }
+
+        if (!email.includes("@")) {
+          document.getElementById("emailError").textContent = "올바른 이메일이 아닙니다";
+          ok = false;
+        }
+
+        if (pw.length < 8) {
+          document.getElementById("pwError").textContent = "8자 이상 입력하세요";
+          ok = false;
+        }
+
+        if (!ok) return; // 하나라도 틀리면 여기서 중단
+
+        // ---------- 값 모으기 ----------
+        const data = new FormData(form);
+        /*
+           FormData = 폼 안의 모든 값을 한 번에 담아주는 객체.
+             data.get("name")        하나 꺼내기
+             data.getAll("interest") 같은 name 여러 개 (체크박스)
+        */
+
+        const interests = data.getAll("interest");
+
+        result.textContent =
+          `이름: ${name}\n` +
+          `이메일: ${email}\n` +
+          `직업: ${data.get("job") || "미선택"}\n` +
+          `관심: ${interests.length ? interests.join(", ") : "없음"}\n` +
+          `알림: ${data.get("notify")}\n` +
+          `소개: ${data.get("bio") || "없음"}`;
+
+        form.reset(); // 폼 전체를 초기 상태로 (input 하나하나 비울 필요 없음)
+      });
+
+      /* ==========================================================
+         ★ input 이벤트 — 타이핑할 때마다 에러 지우기 (UX 개선)
+         ========================================================== */
+      form.addEventListener("input", function (e) {
+        const errorEl = document.getElementById(e.target.id + "Error");
+        if (errorEl) errorEl.textContent = "";
+      });
+      /*
+         form 에 리스너 하나만 달아도 안의 모든 input 을 잡는다 (이벤트 위임).
+         e.target 으로 어느 칸에서 타이핑했는지 알 수 있다.
+
+         자주 쓰는 폼 이벤트:
+           submit  제출
+           input   값이 바뀔 때마다 (글자 하나하나)
+           change  다 입력하고 포커스가 빠질 때 / select, checkbox 선택 시
+           reset   초기화
+      */
+    </script>
+  </body>
+</html>

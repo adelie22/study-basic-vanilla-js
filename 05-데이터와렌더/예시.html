@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>데이터 → 렌더 구조</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: system-ui, sans-serif;
+        background: #f4f4f5;
+        color: #27272a;
+        line-height: 1.6;
+        padding: 24px;
+        max-width: 560px;
+        margin: 0 auto;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e4e4e7;
+        border-radius: 12px;
+        padding: 20px;
+      }
+      h1 { font-size: 20px; margin: 0 0 16px; }
+      .row { display: flex; gap: 8px; margin-bottom: 16px; }
+      .input {
+        flex: 1; padding: 9px 12px; border: 1px solid #d4d4d8;
+        border-radius: 8px; font-family: inherit; font-size: 15px;
+      }
+      .input:focus { outline: none; border-color: #4f46e5; }
+      .btn {
+        background: #4f46e5; color: #fff; border: none;
+        padding: 9px 18px; border-radius: 8px; cursor: pointer;
+        font-size: 15px; font-family: inherit;
+        transition: background-color 0.2s;
+      }
+      .btn:hover { background: #4338ca; }
+
+      .list { list-style: none; padding: 0; margin: 0; }
+      .list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: #fafafa;
+        margin-bottom: 6px;
+      }
+      .list li span { flex: 1; }          /* 글자가 남는 공간 다 먹음 → 버튼이 오른쪽 끝 */
+      .del {
+        background: none; border: none; cursor: pointer;
+        color: #a1a1aa; font-size: 18px; line-height: 1;
+        padding: 4px 8px; border-radius: 6px;
+      }
+      .del:hover { background: #fee2e2; color: #dc2626; }
+
+      .count { color: #71717a; font-size: 14px; margin: 12px 0 0; }
+      .list:empty::before {
+        content: "아직 없습니다.";
+        color: #a1a1aa; font-size: 14px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="card">
+      <h1>할 일 목록</h1>
+
+      <div class="row">
+        <input class="input" id="todoInput" type="text" placeholder="할 일을 입력하세요" />
+        <button class="btn" id="addBtn">추가</button>
+      </div>
+
+      <ul class="list" id="todoList"></ul>
+      <p class="count" id="countText"></p>
+    </div>
+
+    <script>
+      /* ==========================================================
+         핵심 사고 전환
+
+           지금까지 (4단계):
+             버튼 클릭 → 화면에 li 를 직접 붙인다
+             → 데이터가 '화면에만' 존재한다
+             → 삭제, 개수 세기, 저장이 전부 어렵다
+
+           이제부터 (5단계):
+             버튼 클릭 → 배열에 데이터를 넣는다 → 화면을 처음부터 다시 그린다
+
+             ┌─────────┐                  ┌─────────┐
+             │  배열   │  ──render()──→   │  화면   │
+             │ (진실)  │                  │ (그림자) │
+             └─────────┘                  └─────────┘
+
+           배열이 '진짜'고 화면은 그 복사본일 뿐이다.
+           화면을 고치지 말고 배열을 고쳐라. 화면은 알아서 따라온다.
+
+           React, Vue 같은 프레임워크가 하는 일이 정확히 이거다.
+         ========================================================== */
+
+      const todoInput = document.getElementById("todoInput");
+      const addBtn = document.getElementById("addBtn");
+      const todoList = document.getElementById("todoList");
+      const countText = document.getElementById("countText");
+
+      /* ---------- 1. 상태(state) ---------- */
+      let todos = [];
+      /*
+         배열 = 값을 순서대로 여러 개 담는 상자.
+           const arr = ["가", "나", "다"];
+           arr[0]      → "가"   (0부터 센다!)
+           arr.length  → 3      (개수)
+
+         여기엔 이런 객체들이 들어갈 것이다:
+           { id: 1730000000, text: "우유 사기" }
+
+         객체 = 이름표가 붙은 값들의 묶음.
+           const t = { id: 1, text: "우유" };
+           t.text    → "우유"
+
+         왜 문자열만 넣지 않고 id 를 붙이나?
+           → 삭제할 때 "몇 번째"가 아니라 "누구"를 지울지 알아야 하기 때문.
+             순서는 계속 바뀌지만 id 는 안 바뀐다.
+      */
+
+      /* ---------- 2. 렌더 함수 ---------- */
+      function render() {
+        // (1) 기존 화면을 싹 비운다
+        todoList.innerHTML = "";
+
+        // (2) 배열을 돌면서 다시 그린다
+        todos.forEach(function (todo) {
+          const li = document.createElement("li");
+
+          const span = document.createElement("span");
+          span.textContent = todo.text;
+
+          const delBtn = document.createElement("button");
+          delBtn.className = "del";
+          delBtn.textContent = "×";
+          delBtn.dataset.id = todo.id;   // ★ 이 버튼이 누구 것인지 표시해둔다
+
+          li.appendChild(span);
+          li.appendChild(delBtn);
+          todoList.appendChild(li);
+        });
+
+        // (3) 개수도 같이 갱신 — 화면을 세는 게 아니라 배열 길이를 쓴다
+        countText.textContent = `총 ${todos.length}개`;
+      }
+      /*
+         ★ innerHTML = "" 로 다 지우고 다시 그리는 게 비효율 아닌가?
+           항목이 수백 개 넘어가면 그렇다. 그때 가서 최적화하면 된다.
+           지금은 '항상 배열과 화면이 일치한다'는 단순함이 훨씬 가치 있다.
+           버그가 생길 구석이 없어진다.
+
+         ★ forEach(함수)
+           배열의 각 항목에 대해 함수를 한 번씩 실행한다.
+             todos.forEach(function (todo) { ... })
+           반복문 for 를 써도 되지만 forEach 가 더 읽기 쉽다.
+
+         ★ dataset
+           HTML 의 data-* 속성을 다루는 통로다.
+             delBtn.dataset.id = 3   →   <button data-id="3">
+           "이 요소에 관련된 값"을 붙여둘 때 쓴다.
+      */
+
+      /* ---------- 3. 추가 ---------- */
+      addBtn.addEventListener("click", function () {
+        const text = todoInput.value.trim();
+        if (text === "") return;
+
+        todos.push({ id: Date.now(), text: text });  // ① 배열을 바꾸고
+        render();                                    // ② 다시 그린다
+
+        todoInput.value = "";
+        todoInput.focus();
+      });
+      /*
+         push(값)  = 배열 맨 뒤에 추가
+         Date.now() = 1970년부터 지금까지의 밀리초. 겹칠 일이 거의 없어서 임시 id 로 쓴다.
+
+         ★ 이 두 줄이 전부다:  배열 바꾸기 → render()
+           앞으로 어떤 기능을 추가하든 이 형태를 벗어나지 않는다.
+      */
+
+      /* ---------- 4. 엔터로도 추가 ---------- */
+      todoInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          addBtn.click();   // 버튼을 코드로 클릭시킨다
+        }
+      });
+      /*
+         이벤트 함수는 event 객체를 하나 받는다. 그 안에 상황 정보가 들어있다.
+           event.key     어떤 키를 눌렀나
+           event.target  실제로 이벤트가 일어난 요소  ← 아래에서 중요하게 쓴다
+      */
+
+      /* ---------- 5. 삭제 — 이벤트 위임 ---------- */
+      todoList.addEventListener("click", function (event) {
+        // 삭제 버튼이 아니면 무시
+        if (!event.target.classList.contains("del")) return;
+
+        const id = Number(event.target.dataset.id);
+
+        todos = todos.filter(function (todo) {
+          return todo.id !== id;   // id 가 다른 것만 남긴다
+        });
+
+        render();
+      });
+      /*
+         ★ 이벤트 위임 (event delegation)
+
+           삭제 버튼은 render() 할 때마다 새로 만들어진다.
+           그러니 버튼 하나하나에 addEventListener 를 붙이면
+           그릴 때마다 다시 붙여야 하고, 개수만큼 리스너가 쌓인다.
+
+           대신 '부모(ul)'에 딱 하나만 붙이고,
+           event.target 으로 "실제로 눌린 게 누구냐"를 확인한다.
+             → 자식이 몇 개가 되든, 나중에 생기든 상관없이 동작한다.
+
+           클릭은 자식에서 부모로 거슬러 올라간다(버블링). 그래서 가능한 기법이다.
+           동적으로 만들어지는 목록에서는 거의 항상 이 방식을 쓴다.
+
+         ★ filter(함수)
+           조건이 true 인 것만 골라 '새 배열'을 만든다. 원본은 안 바뀐다.
+           그래서 todos = todos.filter(...) 처럼 다시 대입해야 한다.
+             [1,2,3].filter(n => n !== 2)   →  [1,3]
+
+         ★ dataset 값은 항상 '문자열'이다.
+           그래서 Number(...) 로 숫자로 바꿔야 === 비교가 맞는다.
+           안 바꾸면 3 !== "3" 이라 영원히 안 지워진다. 자주 하는 실수.
+      */
+
+      /* ---------- 6. 첫 화면 그리기 ---------- */
+      render();
+      /* 배열이 비어 있어도 한 번 그려야 "총 0개"가 표시된다. */
+    </script>
+  </body>
+</html>

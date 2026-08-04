@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grid 카드 갤러리</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: system-ui, sans-serif; background: #f4f4f5; color: #27272a;
+        line-height: 1.6; margin: 0; padding: 24px;
+      }
+      h1 { font-size: 22px; }
+      h2 { font-size: 16px; margin: 32px 0 12px; }
+
+      /* ============================================================
+         GRID 의 핵심
+
+           부모에 display: grid 를 주고,
+           grid-template-columns 로 '열'을 정의한다.
+
+           flex 는 한 방향(줄)으로 흐르고,
+           grid 는 행과 열이 있는 '표'를 만든다.
+         ============================================================ */
+
+      /* ---------- 1. 고정 3열 ---------- */
+      .grid-3 {
+        display: grid;
+        grid-template-columns: 200px 200px 200px;  /* 열 3개, 각 200px */
+        gap: 12px;
+      }
+
+      /* ---------- 2. fr 단위 — 남는 공간 나누기 ---------- */
+      .grid-fr {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;   /* 균등 3등분 */
+        gap: 12px;
+      }
+      /*
+         fr = fraction(분수). 남는 공간을 비율로 나눈다.
+         flex: 1 과 같은 개념.
+           1fr 2fr    →  1:2 로 나눔
+         px 와 섞어도 된다:  200px 1fr  →  왼쪽 고정, 오른쪽 나머지 전부
+      */
+
+      /* ---------- 3. repeat() — 반복 줄이기 ---------- */
+      .grid-repeat {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);   /* 1fr 을 4번 = 4등분 */
+        gap: 12px;
+      }
+
+      /* ---------- 4. ★ 실전: 자동 반응형 ---------- */
+      .grid-auto {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+      }
+      /*
+         이 한 줄이 카드 갤러리의 정답이다. @media 없이도 반응형이 된다.
+
+           auto-fill        → 몇 열이 들어갈지 브라우저가 알아서 계산
+           minmax(160px,1fr) → 최소 160px, 남으면 1fr 만큼 늘어남
+
+         화면이 넓으면 5열, 좁아지면 3열, 폰에서는 1열.
+         "카드 최소 너비"만 정해주면 나머지는 알아서 된다.
+
+         auto-fill vs auto-fit
+           auto-fill : 빈 열도 자리를 유지 (카드가 적으면 왼쪽 정렬)
+           auto-fit  : 빈 열을 접어서 카드가 늘어남
+         보통 auto-fill 을 쓴다.
+      */
+
+      /* ---------- 카드 ---------- */
+      .card {
+        background: #fff; border: 1px solid #e4e4e7;
+        border-radius: 12px; overflow: hidden;
+        /* overflow:hidden → 이미지 모서리가 카드 밖으로 삐져나오지 않게 */
+        display: flex; flex-direction: column;
+        /* grid 안의 카드 내부는 flex 로 짠다. 둘은 같이 쓰는 것이다 */
+      }
+      .card img {
+        width: 100%; aspect-ratio: 2 / 3; object-fit: cover; display: block;
+      }
+      /*
+         aspect-ratio  → 가로:세로 비율 고정. 이미지 크기가 제각각이어도 카드가 안 틀어진다
+         object-fit: cover → 비율 유지하며 잘라서 꽉 채움 (찌그러지지 않음)
+      */
+      .card-body { padding: 12px; flex: 1; }
+      /* flex:1 → 카드 높이가 달라도 본문이 늘어나서 아래가 맞음 */
+
+      .card h3 { font-size: 15px; margin: 0 0 4px; }
+      .card p { font-size: 13px; color: #71717a; margin: 0; }
+
+      .box {
+        background: #4f46e5; color: #fff; padding: 20px;
+        border-radius: 8px; text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Grid 기초</h1>
+
+    <h2>1. 고정 3열 — <code>200px 200px 200px</code></h2>
+    <div class="grid-3">
+      <div class="box">A</div><div class="box">B</div><div class="box">C</div>
+    </div>
+
+    <h2>2. fr 단위 — <code>1fr 1fr 1fr</code> (균등 분할)</h2>
+    <div class="grid-fr">
+      <div class="box">A</div><div class="box">B</div><div class="box">C</div>
+    </div>
+
+    <h2>3. repeat() — <code>repeat(4, 1fr)</code></h2>
+    <div class="grid-repeat">
+      <div class="box">A</div><div class="box">B</div>
+      <div class="box">C</div><div class="box">D</div>
+    </div>
+
+    <h2>4. ★ 자동 반응형 — <code>repeat(auto-fill, minmax(160px, 1fr))</code></h2>
+    <p style="font-size: 14px; color: #71717a">
+      브라우저 창 너비를 줄였다 늘렸다 해보세요. 열 개수가 알아서 바뀝니다.
+    </p>
+    <div class="grid-auto" id="movieGrid"></div>
+
+    <script>
+      /* 데이터 배열 → 카드 렌더링 (5단계에서 한 것과 같은 구조) */
+      const movies = [
+        { id: 1, title: "인터스텔라", year: 2014, genre: "SF", poster: "https://picsum.photos/id/1025/300/450" },
+        { id: 2, title: "라라랜드", year: 2016, genre: "뮤지컬", poster: "https://picsum.photos/id/1015/300/450" },
+        { id: 3, title: "인셉션", year: 2010, genre: "SF", poster: "https://picsum.photos/id/1016/300/450" },
+        { id: 4, title: "기생충", year: 2019, genre: "드라마", poster: "https://picsum.photos/id/1024/300/450" },
+        { id: 5, title: "위플래쉬", year: 2014, genre: "드라마", poster: "https://picsum.photos/id/1035/300/450" },
+      ];
+
+      const movieGrid = document.getElementById("movieGrid");
+
+      function render() {
+        movieGrid.innerHTML = "";
+
+        movies.forEach((movie) => {
+          const card = document.createElement("article");
+          card.className = "card";
+
+          const img = document.createElement("img");
+          img.src = movie.poster;
+          img.alt = `${movie.title} 포스터`;
+          img.loading = "lazy";   // 화면에 보일 때 로드 (성능)
+
+          const body = document.createElement("div");
+          body.className = "card-body";
+
+          const h3 = document.createElement("h3");
+          h3.textContent = movie.title;
+
+          const info = document.createElement("p");
+          info.textContent = `${movie.year} · ${movie.genre}`;
+
+          body.appendChild(h3);
+          body.appendChild(info);
+          card.appendChild(img);
+          card.appendChild(body);
+          movieGrid.appendChild(card);
+        });
+      }
+
+      render();
+
+      /* ==========================================================
+         flex vs grid — 언제 뭘 쓰나
+
+           flex : 한 줄에 나열. 개수가 유동적. (버튼 묶음, 헤더, 태그)
+           grid : 행과 열이 있는 격자. 크기를 맞춰야 함. (카드 갤러리, 레이아웃)
+
+         실무에서는 같이 쓴다.
+           바깥 갤러리는 grid, 카드 '안쪽'은 flex.
+           지금 예시가 정확히 그 구조다.
+         ========================================================== */
+    </script>
+  </body>
+</html>
