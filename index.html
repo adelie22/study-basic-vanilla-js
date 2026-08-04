@@ -115,6 +115,13 @@
         list-style: none;
         margin-bottom: 5px;
       }
+
+      .reviewList li strong {
+        display: block;
+      }
+      .reviewList li small {
+        color: #71717a;
+      }
     </style>
   </head>
   <body>
@@ -160,9 +167,11 @@
           class="input"
         />
         <button id="submitBtn" class="btn">등록</button>
+        <button id="loadBtn" class="btn">한줄평 불러오기</button>
       </div>
       <ul id="reviewList"></ul>
-       <p id="countText"></p> 
+      <span class="reviewStatus">한줄평이 없습니다.</span>
+      <p id="countText"></p>
     </div>
 
     <script>
@@ -171,8 +180,37 @@
       const submitBtn = document.getElementById("submitBtn");
       const reviewList = document.getElementById("reviewList");
       const countText = document.getElementById("countText");
+      const loadBtn = document.getElementById("loadBtn");
+      const reviewStatus = document.querySelector(".reviewStatus");
+      let comments = JSON.parse(localStorage.getItem(KEY)) || [];
 
-     let comments = JSON.parse(localStorage.getItem(KEY)) || [];
+      async function loadComment() {
+        loadBtn.disabled = true;
+        reviewStatus.textContent = "불러오는중...";
+
+        try {
+          const res = await fetch("https://jsonplaceholder.typicode.com/users");
+          if (!res.ok) {
+            throw new Error(`서버 오류: ${res.status}`);
+          }
+          const reviews = await res.json();
+
+          reviews.forEach((review) => {
+            comments.push({ id: Date.now() + review.id, text: review.name });
+          });
+          save();
+          render();
+
+          reviewStatus.textContent = "";
+        } catch (err) {
+          reviewStatus.textContent = `실패: ${err.message}`;
+          console.error(err);
+        } finally {
+          loadBtn.disabled = false;
+        }
+      }
+
+      loadBtn.addEventListener("click", loadComment);
 
       function save() {
         localStorage.setItem(KEY, JSON.stringify(comments));
@@ -195,7 +233,7 @@
           li.appendChild(delBtn);
           reviewList.appendChild(li);
         });
-        countText.textContent = `총 ${comments.length}개`;   
+        countText.textContent = `총 ${comments.length}개`;
       }
 
       submitBtn.addEventListener("click", function () {
@@ -217,7 +255,7 @@
       });
 
       reviewList.addEventListener("click", function (e) {
-        if (!e.target.classList.contains("del")) return; 
+        if (!e.target.classList.contains("del")) return;
         const id = Number(e.target.dataset.id);
         comments = comments.filter((comment) => comment.id !== id);
         save();
@@ -225,7 +263,6 @@
       });
 
       render();
-   
     </script>
   </body>
 </html>
