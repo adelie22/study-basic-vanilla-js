@@ -162,6 +162,7 @@
         <button id="submitBtn" class="btn">등록</button>
       </div>
       <ul id="reviewList"></ul>
+       <p id="countText"></p> 
     </div>
 
     <script>
@@ -169,6 +170,7 @@
       const reviewInput = document.getElementById("reviewInput");
       const submitBtn = document.getElementById("submitBtn");
       const reviewList = document.getElementById("reviewList");
+      const countText = document.getElementById("countText");
 
       function render() {
         reviewList.innerHTML = "";
@@ -187,6 +189,7 @@
           li.appendChild(delBtn);
           reviewList.appendChild(li);
         });
+        countText.textContent = `총 ${comments.length}개`;   
       }
 
       submitBtn.addEventListener("click", function () {
@@ -200,6 +203,7 @@
       });
 
       reviewInput.addEventListener("keydown", function (e) {
+        if (e.isComposing) return;
         if (e.key === "Enter") {
           submitBtn.click();
         }
@@ -213,6 +217,7 @@
       });
 
       render();
+   
     </script>
   </body>
 </html>
