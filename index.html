@@ -115,22 +115,33 @@
 
       .movieGrid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 12px;
       }
 
-      .search {
-        width: 100%;
-        padding: 10px;
+      .search-container {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .search,
+      select {
         border-radius: 15px;
         border: 1px solid #000000;
         font-family: inherit;
         font-size: 15px;
         margin-bottom: 8px;
+        height: 30px;
+        padding: 5px;
+      }
+
+      .search {
+        flex: 1;
       }
       .search:focus {
         outline: none;
-        border-color: #4f46e5;
+        border-color: #f66c6c;
       }
 
       .card {
@@ -178,7 +189,18 @@
       <p>인생 영화 3편을 소개합니다.</p>
     </div>
     <hr />
-    <input class="search" type="search" placeholder="영화를 검색하세요" />
+    <div class="search-container">
+      <input class="search" type="search" placeholder="영화를 검색하세요" />
+      <select id="genreSelect">
+        <option value="">모든 장르</option>
+      </select>
+      <select id="sortSelect">
+        <option value="default">기본순</option>
+        <option value="year-desc">최신순</option>
+        <option value="year-asc">오래된순</option>
+        <option value="title">제목순</option>
+      </select>
+    </div>
     <span class="count"></span>
 
     <div id="movieGrid" class="movieGrid"></div>
@@ -253,13 +275,41 @@
       const movieGrid = document.querySelector(".movieGrid");
       const search = document.querySelector(".search");
       const count = document.querySelector(".count");
+      const genreSelect = document.getElementById("genreSelect");
+      const sortSelect = document.getElementById("sortSelect");
 
+      let genre = "";
+      let sort = "default";
       let comments = JSON.parse(localStorage.getItem(KEY)) || [];
       let keyword = "";
+
+      function fillGenres() {
+        const genres = [...new Set(movies.map((m) => m.genre))];
+        genres.forEach((g) => {
+          const opt = document.createElement("option");
+          opt.value = g;
+          opt.textContent = g;
+          genreSelect.appendChild(opt);
+        });
+      }
+
       function getVisibleMovies() {
-        return movies.filter((movie) =>
-          movie.title.toLowerCase().includes(keyword.toLowerCase()),
-        );
+        let list = movies.filter((movie) => {
+          const matchKeyword = movie.title
+            .toLowerCase()
+            .includes(keyword.toLowerCase());
+          const matchGenre = genre === "" || movie.genre === genre;
+          return matchKeyword && matchGenre;
+        });
+
+        if (sort === "year-desc") {
+          list.sort((a, b) => b.year - a.year);
+        } else if (sort === "year-asc") {
+          list.sort((a, b) => a.year - b.year);
+        } else if (sort === "title") {
+          list.sort((a, b) => a.title.localeCompare(b.title));
+        }
+        return list;
       }
 
       function renderMovies() {
@@ -271,7 +321,6 @@
           p.className = "empty";
           p.textContent = `"${keyword}" 검색 결과가 없습니다`;
           movieGrid.appendChild(p);
-          countText.textContent = "0편";
           return;
         }
         /*
@@ -308,12 +357,19 @@
 
       search.addEventListener("input", function (e) {
         keyword = search.value.trim();
-        renderMovies(); 
+        renderMovies();
       });
-       renderMovies(); 
+      renderMovies();
 
-     
+      genreSelect.addEventListener("change", function () {
+        genre = genreSelect.value;
+        renderMovies();
+      });
 
+      sortSelect.addEventListener("change", function () {
+        sort = sortSelect.value;
+        renderMovies();
+      });
 
       async function loadComment() {
         loadBtn.disabled = true;
@@ -393,6 +449,7 @@
         render();
       });
 
+      fillGenres()
       render();
     </script>
   </body>
