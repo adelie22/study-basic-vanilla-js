@@ -119,25 +119,18 @@
         gap: 12px;
       }
 
-      @media (min-width: 900px) {
-        h1 {
-          color: blueviolet;
-          margin: 0;
-          font-size: 20px;
-        }
+      .search {
+        width: 100%;
+        padding: 10px;
+        border-radius: 15px;
+        border: 1px solid #000000;
+        font-family: inherit;
+        font-size: 15px;
+        margin-bottom: 8px;
       }
-
-      @media (max-width: 700px) {
-        .movieGrid {
-          grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-        }
-        .card-head {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-        h1 {
-          font-size: 5px;
-        }
+      .search:focus {
+        outline: none;
+        border-color: #4f46e5;
       }
 
       .card {
@@ -170,6 +163,13 @@
         color: #71717a;
         margin: 0;
       }
+
+      .empty {
+        grid-column: 1 / -1; /* 격자 전체 폭을 차지 */
+        text-align: center;
+        color: #a1a1aa;
+        padding: 20px 0;
+      }
     </style>
   </head>
   <body>
@@ -178,6 +178,8 @@
       <p>인생 영화 3편을 소개합니다.</p>
     </div>
     <hr />
+    <input class="search" type="search" placeholder="영화를 검색하세요" />
+    <span class="count"></span>
 
     <div id="movieGrid" class="movieGrid"></div>
 
@@ -249,39 +251,69 @@
       const loadBtn = document.getElementById("loadBtn");
       const reviewStatus = document.querySelector(".reviewStatus");
       const movieGrid = document.querySelector(".movieGrid");
+      const search = document.querySelector(".search");
+      const count = document.querySelector(".count");
 
       let comments = JSON.parse(localStorage.getItem(KEY)) || [];
+      let keyword = "";
+      function getVisibleMovies() {
+        return movies.filter((movie) =>
+          movie.title.toLowerCase().includes(keyword.toLowerCase()),
+        );
+      }
 
       function renderMovies() {
+        const list = getVisibleMovies();
         movieGrid.innerHTML = "";
 
-        movies.forEach((movie) => {
+        if (list.length === 0) {
+          const p = document.createElement("p");
+          p.className = "empty";
+          p.textContent = `"${keyword}" 검색 결과가 없습니다`;
+          movieGrid.appendChild(p);
+          countText.textContent = "0편";
+          return;
+        }
+        /*
+           ★ 빈 상태(empty state) 처리는 필수다.
+             결과가 없을 때 화면이 그냥 텅 비면 사용자는 고장인 줄 안다.
+        */
+        list.forEach((movie) => {
           const card = document.createElement("article");
           card.className = "card";
 
           const img = document.createElement("img");
           img.src = movie.poster;
-          img.alt = `${movie.title} 의 포스터`;
+          img.alt = `${movie.title} 포스터`;
           img.loading = "lazy";
 
           const body = document.createElement("div");
           body.className = "card-body";
 
-          const movieName = document.createElement("h3");
-          movieName.textContent = movie.title;
+          const h3 = document.createElement("h3");
+          h3.textContent = movie.title;
 
           const info = document.createElement("p");
           info.textContent = `${movie.year} · ${movie.genre}`;
 
-          body.appendChild(movieName);
+          body.appendChild(h3);
           body.appendChild(info);
           card.appendChild(img);
           card.appendChild(body);
           movieGrid.appendChild(card);
         });
+
+        count.textContent = `${list.length}편`;
       }
 
-      renderMovies();
+      search.addEventListener("input", function (e) {
+        keyword = search.value.trim();
+        renderMovies(); 
+      });
+       renderMovies(); 
+
+     
+
 
       async function loadComment() {
         loadBtn.disabled = true;
