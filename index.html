@@ -92,9 +92,13 @@
       .input {
         flex: 1;
         padding: 10px;
-        border-radius: 8px;
+        border-radius: 15px;
         border: 1px solid var(--border);
-        min-width: 600px;
+        font-family: inherit;
+      }
+      .input:focus {
+        outline: none;
+        border-color: var(--primary);
       }
 
       .reviewList:empty::before {
@@ -117,14 +121,6 @@
         border-radius: 999px;
         list-style: none;
         margin-bottom: 5px;
-      }
-
-      .reviewList li strong {
-        display: block;
-      }
-
-      .reviewList li small {
-        color: var(--text-muted);
       }
 
       .movieGrid {
@@ -233,6 +229,7 @@
     <p id="countText"></p>
 
     <script>
+      // 배열
       const movies = [
         {
           id: 1,
@@ -277,7 +274,17 @@
           poster: "https://picsum.photos/id/1043/300/450",
         },
       ];
+
+      // 상수, 변수
       const KEY = "comments";
+
+      // 상태
+      let genre = "";
+      let sort = "default";
+      let comments = JSON.parse(localStorage.getItem(KEY)) || [];
+      let keyword = "";
+
+      //   DOM 참조
       const reviewInput = document.getElementById("reviewInput");
       const submitBtn = document.getElementById("submitBtn");
       const reviewList = document.getElementById("reviewList");
@@ -290,11 +297,8 @@
       const genreSelect = document.getElementById("genreSelect");
       const sortSelect = document.getElementById("sortSelect");
 
-      let genre = "";
-      let sort = "default";
-      let comments = JSON.parse(localStorage.getItem(KEY)) || [];
-      let keyword = "";
-
+      // 순수 함수
+      // 영화배열에 있는 영화들의 모든 장르를 중복없이 부모노드에 붙여주는 함수
       function fillGenres() {
         const genres = [...new Set(movies.map((m) => m.genre))];
         genres.forEach((g) => {
@@ -305,6 +309,7 @@
         });
       }
 
+      // 검색, 정렬에 맞는 영화를 list에 담아주는 함수
       function getVisibleMovies() {
         let list = movies.filter((movie) => {
           const matchKeyword = movie.title
@@ -324,6 +329,7 @@
         return list;
       }
 
+      // list를 보고 렌더링하는 함수
       function renderMovies() {
         const list = getVisibleMovies();
         movieGrid.innerHTML = "";
@@ -335,10 +341,7 @@
           movieGrid.appendChild(p);
           return;
         }
-        /*
-           ★ 빈 상태(empty state) 처리는 필수다.
-             결과가 없을 때 화면이 그냥 텅 비면 사용자는 고장인 줄 안다.
-        */
+
         list.forEach((movie) => {
           const card = document.createElement("article");
           card.className = "card";
@@ -367,23 +370,8 @@
         count.textContent = `${list.length}편`;
       }
 
-      search.addEventListener("input", function (e) {
-        keyword = search.value.trim();
-        renderMovies();
-      });
-      renderMovies();
-
-      genreSelect.addEventListener("change", function () {
-        genre = genreSelect.value;
-        renderMovies();
-      });
-
-      sortSelect.addEventListener("change", function () {
-        sort = sortSelect.value;
-        renderMovies();
-      });
-
-      async function loadComment() {
+      // 한줄평 로컬저장소에서 불러오는 함수
+      async function loadReview() {
         loadBtn.disabled = true;
         reviewStatus.textContent = "불러오는중...";
 
@@ -397,8 +385,8 @@
           reviews.forEach((review) => {
             comments.push({ id: Date.now() + review.id, text: review.name });
           });
-          save();
-          render();
+          saveReview();
+          renderReview();
 
           reviewStatus.textContent = "";
         } catch (err) {
@@ -409,13 +397,13 @@
         }
       }
 
-      loadBtn.addEventListener("click", loadComment);
-
-      function save() {
+      // 로컬저장소에 한줄평 저장하는 함수
+      function saveReview() {
         localStorage.setItem(KEY, JSON.stringify(comments));
       }
 
-      function render() {
+      //한줄평 렌더링하는 함수
+      function renderReview() {
         reviewList.innerHTML = "";
 
         comments.forEach((comment) => {
@@ -435,12 +423,31 @@
         countText.textContent = `총 ${comments.length}개`;
       }
 
+      // 이벤트 리스너
+      search.addEventListener("input", function (e) {
+        keyword = search.value.trim();
+        renderMovies();
+      });
+      renderMovies();
+
+      genreSelect.addEventListener("change", function () {
+        genre = genreSelect.value;
+        renderMovies();
+      });
+
+      sortSelect.addEventListener("change", function () {
+        sort = sortSelect.value;
+        renderMovies();
+      });
+
+      loadBtn.addEventListener("click", loadReview);
+
       submitBtn.addEventListener("click", function () {
         const text = reviewInput.value.trim();
         if (text === "") return;
         comments.push({ id: Date.now(), text: text });
-        save();
-        render();
+        saveReview();
+        renderReview();
 
         reviewInput.value = "";
         reviewInput.focus();
@@ -457,12 +464,13 @@
         if (!e.target.classList.contains("del")) return;
         const id = Number(e.target.dataset.id);
         comments = comments.filter((comment) => comment.id !== id);
-        save();
-        render();
+        saveReview();
+        renderReview();
       });
+      
 
       fillGenres();
-      render();
+      renderReview();
     </script>
   </body>
 </html>
